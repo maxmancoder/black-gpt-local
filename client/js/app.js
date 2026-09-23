@@ -208,9 +208,9 @@ function showContextMenu(e, chatId) {
   const menu = document.createElement('div');
   menu.className = 'ctx-menu';
   menu.innerHTML = `
-    <button data-act="rename">✏️ تغییر نام</button>
-    <button data-act="settings">⚙ تنظیمات چت</button>
-    <button data-act="delete" class="danger">🗑 حذف</button>
+    <button data-act="rename"><svg class="ctx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> تغییر نام</button>
+    <button data-act="settings"><svg class="ctx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> تنظیمات چت</button>
+    <button data-act="delete" class="danger"><svg class="ctx-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> حذف</button>
   `;
   document.body.appendChild(menu);
   const x = Math.min(e.clientX, window.innerWidth - 170);
@@ -255,10 +255,10 @@ async function loadModels() {
       updateModelLabel();
     }
     $('#lm-dot').classList.toggle('on', data.online);
-    $('#lm-text').textContent = data.online ? `LM Studioآنلاین (${data.models.length})` : 'LM Studio آفلاین';
+    $('#lm-text').textContent = data.online ? `LM Studio: آنلاین` : 'LM Studio: آفلاین';
   } catch (e) {
     $('#lm-dot').classList.remove('on');
-    $('#lm-text').textContent = 'LM Studio آفلاین';
+    $('#lm-text').textContent = 'LM Studio: آفلاین';
   }
 }
 
@@ -299,14 +299,14 @@ function updateModelLabel() {
 function welcomeHtml() {
   return `
     <div class="empty-state">
-      <div class="logo-mark">BG</div>
+      <div class="hero-logo">BG</div>
       <h2>Black GPT</h2>
-      <p>با مدل‌های هوش مصنوعی لوکال خودتان چت کنید</p>
+      <p class="tagline">با مدل‌های هوش مصنوعی لوکال خودتان چت کنید</p>
       <div class="hints">
-        <button class="hint-chip" data-hint="یک ایمیل رسمی برای درخواست مرخصی بنویس">✉️ نوشتن ایمیل</button>
-        <button class="hint-chip" data-hint="کد فیبوناچی در جاوااسکریپت بنویس با توضیح">💻 نوشتن کد</button>
-        <button class="hint-chip" data-hint="درباره فواید ورزش صبحگاهی یک متن کوتاه بنویس">📝 متن‌نویسی</button>
-        <button class="hint-chip" data-hint="ایده برای پروژه دانشگاهی در هوش مصنوعی بده">💡 ایده‌پردازی</button>
+        <button class="hint-chip hint-idea" data-hint="ایده برای پروژه دانشگاهی در هوش مصنوعی بده">💡 ایده‌پردازی</button>
+        <button class="hint-chip hint-write" data-hint="درباره فواید ورزش صبحگاهی یک متن کوتاه بنویس">✍️ متن‌نویسی</button>
+        <button class="hint-chip hint-code" data-hint="کد فیبوناچی در جاوااسکریپت بنویس با توضیح">💻 نوشتن کد</button>
+        <button class="hint-chip hint-email" data-hint="یک ایمیل رسمی برای درخواست مرخصی بنویس">✉️ نوشتن ایمیل</button>
       </div>
     </div>`;
 }
@@ -363,6 +363,23 @@ function scrollToBottom() {
   el.scrollTop = el.scrollHeight;
 }
 
+function syncTopbarTitle() {
+  const brand = $('#topbar-brand');
+  const title = $('#chat-title');
+  if (!brand || !title) return;
+  if (state.currentChat) {
+    brand.classList.add('hidden');
+    title.classList.remove('hidden');
+    title.disabled = false;
+    title.value = state.currentChat.title || '';
+  } else {
+    brand.classList.remove('hidden');
+    title.classList.add('hidden');
+    title.value = '';
+    title.disabled = true;
+  }
+}
+
 async function openChat(id) {
   if (state.streaming) stopStream();
   const data = await api(`/api/chats/${id}`);
@@ -371,8 +388,7 @@ async function openChat(id) {
   state.model = data.chat.model || state.model;
   updateModelLabel();
   renderModelMenu();
-  $('#chat-title').disabled = false;
-  $('#chat-title').value = data.chat.title || '';
+  syncTopbarTitle();
   renderMessages();
   renderChatList();
   closeSidebarMobile();
@@ -382,8 +398,7 @@ async function openChat(id) {
 function newChat() {
   state.currentChat = null;
   state.messages = [];
-  $('#chat-title').value = '';
-  $('#chat-title').disabled = true;
+  syncTopbarTitle();
   renderMessages();
   renderChatList();
   updateUsageInfo();
@@ -432,9 +447,7 @@ async function sendMessage() {
         body: JSON.stringify({ title: text.slice(0, 50), model: state.model })
       });
       state.currentChat = data.chat;
-      $('#chat-title').disabled = false;
-      $('#chat-title').value = data.chat.title;
-      $('#chat-title').disabled = false;
+      syncTopbarTitle();
       loadChats();
     } else if (!state.currentChat.model || state.currentChat.model !== state.model) {
       api(`/api/chats/${state.currentChat.id}`, { method: 'PATCH', body: JSON.stringify({ model: state.model }) }).catch(() => {});
@@ -604,12 +617,12 @@ function setSendButton(streaming) {
   const btn = $('#send-btn');
   if (streaming) {
     btn.classList.add('stop');
-    btn.textContent = '■';
+    btn.innerHTML = '■';
     btn.disabled = false;
     btn.title = 'توقف';
   } else {
     btn.classList.remove('stop');
-    btn.textContent = '➤';
+    btn.innerHTML = '<svg class="send-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
     btn.disabled = !$('#input').value.trim();
     btn.title = 'ارسال';
   }
@@ -624,8 +637,7 @@ async function uploadFile(file) {
       body: JSON.stringify({ title: file.name.slice(0, 50), model: state.model })
     });
     state.currentChat = data.chat;
-    $('#chat-title').disabled = false;
-    $('#chat-title').value = data.chat.title;
+    syncTopbarTitle();
     loadChats();
   }
   const fd = new FormData();
@@ -676,7 +688,7 @@ async function openChatSettings(chatId) {
       const data = await api(`/api/chats/${id}`, { method: 'PATCH', body: JSON.stringify(body) });
       if (state.currentChat && state.currentChat.id === id) {
         state.currentChat = data.chat;
-        $('#chat-title').value = data.chat.title;
+        syncTopbarTitle();
       }
       loadChats($('#search-input').value.trim());
       $('#chat-settings-modal').classList.add('hidden');
@@ -756,6 +768,10 @@ function init() {
   $('#mobile-menu').onclick = () => setSidebarOpen(isSidebarClosed());
   $('#sidebar-overlay').onclick = () => setSidebarOpen(false);
   $('#new-chat-btn').onclick = () => { newChat(); closeSidebarMobile(); };
+  const topNew = $('#topbar-new-chat');
+  if (topNew) topNew.onclick = () => { newChat(); closeSidebarMobile(); };
+  const lockBtn = $('#lock-btn');
+  if (lockBtn) lockBtn.onclick = () => openSettings();
 
   $('#search-input').addEventListener('input', (e) => {
     clearTimeout(state.searchTimer);
@@ -848,6 +864,7 @@ function init() {
   window.addEventListener('resize', syncMobileBtns);
   syncMobileBtns();
 
+  syncTopbarTitle();
   const hashId = location.hash.startsWith('#chat=') ? Number(location.hash.slice(6)) : null;
   if (hashId) openChat(hashId);
 

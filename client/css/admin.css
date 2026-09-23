@@ -4,15 +4,18 @@
   display: flex;
   height: 100vh;
   width: 100vw;
+  direction: ltr;
+  background: var(--bg-deep, #111);
 }
 
 .admin-sidebar {
   width: 240px;
-  background: var(--bg-secondary);
-  border-left: 1px solid var(--border);
+  background: var(--bg-secondary, #141414);
+  border-right: 1px solid var(--border-soft, rgba(255,255,255,.06));
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  direction: rtl;
 }
 
 .admin-nav {
@@ -29,19 +32,40 @@
   border: none;
   color: var(--text-secondary);
   padding: 11px 14px;
-  border-radius: 9px;
+  border-radius: 10px;
   font-size: 14px;
   text-align: right;
-  transition: background .12s;
+  transition: background .12s, color .12s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .nav-item:hover { background: var(--bg-hover); color: var(--text); }
-.nav-item.active { background: var(--bg-tertiary); color: var(--text); font-weight: 600; }
+.nav-item.active {
+  background: rgba(45, 212, 191, .12);
+  color: var(--accent-soft, #5eead4);
+  font-weight: 700;
+  border-color: rgba(45, 212, 191, .3);
+}
+.nav-ico {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+[data-theme="light"] .nav-item.active {
+  background: rgba(13, 148, 136, .12);
+  color: var(--accent);
+}
 
 .admin-main {
   flex: 1;
   overflow-y: auto;
   padding: 28px 32px;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 70% 50% at 70% 20%, rgba(95, 70, 45, .2), transparent 60%),
+    var(--bg, #1a1a1a);
+  direction: rtl;
 }
 
 .tab-panel { display: none; }
@@ -60,6 +84,14 @@
 }
 .panel-head h2 { margin: 0; }
 .head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.btn-ico {
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-left: 6px;
+}
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+.btn-primary .btn-ico { margin-left: 0; }
 .search-field {
   background: var(--bg-input);
   border: 1px solid var(--border);
@@ -79,17 +111,19 @@
   margin-bottom: 22px;
 }
 .stat-card {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--bg-card, #2b2b2b);
+  border: 1px solid var(--border-soft, rgba(255,255,255,.06));
+  border-radius: 16px;
   padding: 18px;
   text-align: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
 }
 .stat-num {
   font-size: 30px;
   font-weight: 800;
-  color: var(--accent);
+  color: var(--accent-soft, #5eead4);
   direction: ltr;
+  text-shadow: 0 0 20px rgba(45, 212, 191, .3);
 }
 .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
 
@@ -101,11 +135,12 @@
 @media (max-width: 900px) { .panel-row { grid-template-columns: 1fr; } }
 
 .panel {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 14px;
+  background: var(--bg-card, #2b2b2b);
+  border: 1px solid var(--border-soft, rgba(255,255,255,.06));
+  border-radius: 16px;
   padding: 18px;
   margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15);
 }
 
 .lm-panel { font-size: 14px; }
@@ -159,15 +194,20 @@
 }
 .day-col span { font-size: 9.5px; color: var(--text-muted); direction: ltr; }
 
-.table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border-soft, rgba(255,255,255,.06));
+  border-radius: 14px;
+  background: var(--bg-card, #2b2b2b);
+}
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
-  background: var(--bg-secondary);
+  background: transparent;
 }
 .data-table th {
-  background: var(--bg-tertiary);
+  background: rgba(255,255,255,.03);
   padding: 11px 14px;
   text-align: right;
   font-size: 12.5px;
@@ -182,11 +222,34 @@
 .data-table tr:hover td { background: var(--bg-hover); }
 
 .badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   padding: 3px 10px;
   border-radius: 20px;
   font-size: 12px;
   white-space: nowrap;
+}
+.badge-ico {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.inline-ico {
+  width: 15px;
+  height: 15px;
+  vertical-align: -3px;
+}
+.inline-ico.ok { color: #22c55e; }
+.inline-ico.err { color: #ef4444; }
+.btn-mini {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-mini .btn-ico {
+  width: 14px;
+  height: 14px;
 }
 .badge.green { background: rgba(16,163,127,.14); color: var(--accent); }
 .badge.yellow { background: rgba(245,158,11,.14); color: var(--warning); }
