@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل ادمین — Black GPT</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/admin.css">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+</head>
+<body>
+<div class="admin-app">
+  <aside class="admin-sidebar">
+    <div class="sidebar-header">
+      <div class="brand"><div class="logo-mark">BG</div> Admin Panel</div>
+    </div>
+    <nav class="admin-nav">
+      <button class="nav-item active" data-tab="dashboard">📊 داشبورد</button>
+      <button class="nav-item" data-tab="users">👥 کاربران</button>
+      <button class="nav-item" data-tab="chats">💬 چت‌ها</button>
+      <button class="nav-item" data-tab="models">🤖 مدل‌ها</button>
+      <button class="nav-item" data-tab="usage">📈 مصرف</button>
+      <button class="nav-item" data-tab="logs">📜 لاگ‌ها</button>
+      <button class="nav-item" data-tab="settings">⚙️ تنظیمات</button>
+    </nav>
+    <div class="sidebar-footer">
+      <a class="nav-item" href="/" style="text-decoration:none">← بازگشت به چت</a>
+      <div class="user-row" id="admin-user-row">
+        <div class="avatar" id="admin-avatar">A</div>
+        <div class="user-meta"><div class="name" id="admin-name">-</div><div class="role">ادمین</div></div>
+        <button class="icon-btn" id="admin-logout" title="خروج">⏻</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="admin-main">
+    <!-- Dashboard -->
+    <section class="tab-panel active" id="tab-dashboard">
+      <h2>داشبورد</h2>
+      <div class="stat-grid" id="stat-grid">
+        <div class="stat-card"><div class="stat-num" id="st-users">-</div><div class="stat-label">کاربران</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-chats">-</div><div class="stat-label">چت‌ها</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-messages">-</div><div class="stat-label">پیام‌ها</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-messages-today">-</div><div class="stat-label">پیام امروز</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-files">-</div><div class="stat-label">فایل‌ها</div></div>
+        <div class="stat-card"><div class="stat-num" id="st-models">-</div><div class="stat-label">مدل‌ها</div></div>
+      </div>
+      <div class="panel-row">
+        <div class="panel">
+          <h3>وضعیت LM Studio</h3>
+          <div id="lm-panel" class="lm-panel">در حال بررسی...</div>
+          <h3>پرکاربردترین مدل‌ها</h3>
+          <div id="model-usage" class="usage-bars">-</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Users -->
+    <section class="tab-panel" id="tab-users">
+      <div class="panel-head">
+        <h2>کاربران</h2>
+        <div class="head-actions">
+          <input type="text" id="users-search" class="search-field" placeholder="جستجوی کاربر..." autocomplete="off">
+          <button class="btn-primary" id="add-user-btn">+ کاربر جدید</button>
+        </div>
+      </div>
+      <div class="panel" id="reg-requests-panel">
+        <h3>درخواست‌های ثبت‌نام در انتظار تایید</h3>
+        <div class="table-wrap">
+          <table class="data-table" id="reg-requests-table">
+            <thead><tr><th>نام کاربری</th><th>وضعیت</th><th>تاریخ ثبت</th><th>عملیات</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="users-table">
+          <thead>
+            <tr>
+              <th>کاربر</th><th>نقش</th><th>وضعیت</th><th>سقف چت</th><th>سقف پیام</th>
+              <th>مصرف</th><th>چت‌ها</th><th>آخرین فعالیت</th><th>عملیات</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Chats -->
+    <section class="tab-panel" id="tab-chats">
+      <div class="panel-head">
+        <h2>چت‌ها</h2>
+        <input type="text" id="chats-search" class="search-field" placeholder="جستجو در عنوان، کاربر، مدل یا متن پیام..." autocomplete="off">
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="chats-table">
+          <thead><tr><th>#</th><th>عنوان</th><th>کاربر</th><th>مدل</th><th>پیام</th><th>آخرین بروزرسانی</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Models -->
+    <section class="tab-panel" id="tab-models">
+      <div class="panel-head">
+        <h2>مدل‌ها</h2>
+        <button class="btn-primary" id="refresh-models">🔄 رفرش از LM Studio</button>
+      </div>
+      <div class="panel">
+        <p class="hint-text">مدل‌های فعال برای همه کاربران نمایش داده میشوند. دسترسی هر کاربر را میتوانید جداگانه تعیین کنید.</p>
+        <div id="models-list" class="models-admin-list"></div>
+      </div>
+      <div class="panel">
+        <h3>دسترسی مدل‌ها به تفکیک کاربر</h3>
+        <div class="table-wrap">
+          <table class="data-table" id="perms-table">
+            <thead><tr id="perms-head"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Usage -->
+    <section class="tab-panel" id="tab-usage">
+      <h2>مصرف مدل‌ها</h2>
+      <div class="table-wrap">
+        <table class="data-table" id="usage-table">
+          <thead><tr><th>کاربر</th><th>مدل</th><th>وضعیت</th><th>زمان (ms)</th><th>تاریخ</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Logs -->
+    <section class="tab-panel" id="tab-logs">
+      <h2>لاگ سیستم</h2>
+      <div class="table-wrap">
+        <table class="data-table" id="logs-table">
+          <thead><tr><th>کاربر</th><th>عملیات</th><th>جزئیات</th><th>زمان</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="tab-panel" id="tab-settings">
+      <h2>تنظیمات سایت</h2>
+      <div class="panel">
+        <label>نام سایت
+          <input type="text" id="set-site-name">
+        </label>
+        <label>ثبت‌نام آزاد
+          <select id="set-allow-reg">
+            <option value="true">فعال</option>
+            <option value="false">غیرفعال</option>
+            <option value="pending">در انتظار تایید ادمین</option>
+          </select>
+        </label>
+        <label>System Prompt پیش‌فرض
+          <textarea id="set-system" rows="5"></textarea>
+        </label>
+        <label>Temperature پیش‌فرض
+          <input type="number" id="set-temp" min="0" max="2" step="0.1">
+        </label>
+        <label>حداکثر پیام در context
+          <input type="number" id="set-ctx" min="5" max="200">
+        </label>
+        <button class="btn-primary" id="save-site-settings">ذخیره تنظیمات</button>
+        <div id="site-settings-msg" style="margin-top:10px;font-size:13px"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- User modal -->
+<div class="modal-backdrop hidden" id="user-modal">
+  <div class="modal">
+    <h3 id="user-modal-title">کاربر جدید</h3>
+    <label>نام کاربری
+      <input type="text" id="um-username">
+    </label>
+    <label id="um-pass-label">رمز عبور
+      <input type="text" id="um-password" placeholder="برای ویرایش خالی بگذارید">
+    </label>
+    <label>نقش
+      <select id="um-role"><option value="user">کاربر</option><option value="admin">ادمین</option></select>
+    </label>
+    <label>وضعیت
+      <select id="um-status">
+        <option value="active">🟢 آزاد</option>
+        <option value="limited">🟡 محدود</option>
+        <option value="blocked">🔴 مسدود</option>
+      </select>
+    </label>
+    <label>سقف چت جدید (خالی = نامحدود)
+      <input type="number" id="um-chats" min="0" placeholder="مثلاً 50">
+    </label>
+    <label>سقف پیام (خالی = نامحدود)
+      <input type="number" id="um-messages" min="0" placeholder="مثلاً 500">
+    </label>
+    <div class="modal-actions">
+      <button class="btn-primary" id="um-save">ذخیره</button>
+      <button class="btn-secondary" id="um-cancel">انصراف</button>
+      <button class="btn-danger hidden" id="um-delete">حذف کاربر</button>
+    </div>
+    <div id="um-msg" style="margin-top:10px;font-size:13px"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<script src="/js/admin.js"></script>
+</body>
+</html>

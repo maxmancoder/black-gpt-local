@@ -1,0 +1,5 @@
+﻿Public URL: https://bbs-chat-toilet-massage.trycloudflare.com
+Started: 2026-09-22T17:54:06.6682333+03:30
+Cloudflared PID: 19136
+WARP: Status update: Connected
+Keep-alive: WARP must stay Connected; if WARP disconnects, tunnel may fail.

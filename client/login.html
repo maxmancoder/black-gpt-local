@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ورود — Black GPT</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="manifest" href="/manifest.json">
+</head>
+<body class="auth-body">
+<div class="auth-card">
+  <div class="auth-logo">
+    <div class="logo-mark">BG</div>
+    <h1>Black GPT</h1>
+    <p class="auth-sub">چت با مدل‌های هوش مصنوعی لوکال</p>
+  </div>
+
+  <div class="auth-tabs">
+    <button id="tab-login" class="auth-tab active" type="button">ورود</button>
+    <button id="tab-register" class="auth-tab" type="button">ثبت‌نام</button>
+  </div>
+
+  <form id="login-form" class="auth-form">
+    <label>نام کاربری
+      <input type="text" id="login-user" autocomplete="username" required>
+    </label>
+    <label>رمز عبور
+      <input type="password" id="login-pass" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="btn-primary">ورود</button>
+  </form>
+
+  <form id="register-form" class="auth-form hidden">
+    <label>نام کاربری (انگلیسی)
+      <input type="text" id="reg-user" autocomplete="username" required>
+    </label>
+    <label>رمز عبور
+      <input type="password" id="reg-pass" autocomplete="new-password" required>
+    </label>
+    <button type="submit" class="btn-primary">ساخت حساب</button>
+  </form>
+
+  <div id="auth-error" class="auth-error hidden"></div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const tabLogin = $('#tab-login');
+const tabRegister = $('#tab-register');
+const loginForm = $('#login-form');
+const registerForm = $('#register-form');
+const errBox = $('#auth-error');
+
+function showTab(tab) {
+  tabLogin.classList.toggle('active', tab === 'login');
+  tabRegister.classList.toggle('active', tab === 'register');
+  loginForm.classList.toggle('hidden', tab !== 'login');
+  registerForm.classList.toggle('hidden', tab !== 'register');
+  errBox.classList.add('hidden');
+}
+tabLogin.onclick = () => showTab('login');
+tabRegister.onclick = () => showTab('register');
+
+function showError(msg) {
+  errBox.textContent = msg;
+  errBox.classList.remove('hidden');
+}
+
+async function post(url, body) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'خطا');
+  return data;
+}
+
+loginForm.onsubmit = async (e) => {
+  e.preventDefault();
+  errBox.classList.add('hidden');
+  try {
+    await post('/api/auth/login', {
+      username: $('#login-user').value.trim(),
+      password: $('#login-pass').value
+    });
+    location.href = '/';
+  } catch (err) {
+    showError(err.message);
+  }
+};
+
+registerForm.onsubmit = async (e) => {
+  e.preventDefault();
+  errBox.classList.add('hidden');
+  try {
+    const data = await post('/api/auth/register', {
+      username: $('#reg-user').value.trim(),
+      password: $('#reg-pass').value
+    });
+    if (data && data.pending) {
+      errBox.textContent = data.message || 'درخواست ثبت نام شما به ادمین فرستاده شد! منتظر بمانید و بعدا با این اطلاعات، روی ورود بزنید.';
+      errBox.style.color = 'var(--accent, #10a37f)';
+      errBox.classList.remove('hidden');
+      setTimeout(() => {
+        showTab('login');
+        errBox.style.color = '';
+      }, 5000);
+      return;
+    }
+    location.href = '/';
+  } catch (err) {
+    showError(err.message);
+  }
+};
+
+fetch('/api/auth/me').then(r => { if (r.ok) location.href = '/'; }).catch(() => {});
+</script>
+</body>
+</html>

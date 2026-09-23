@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#212121">
+<title>Black GPT</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.5/dist/purify.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css" id="hljs-theme">
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/common.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <button class="icon-btn" id="toggle-sidebar" title="بستن سایدبار">☰</button>
+      <div class="brand"><div class="logo-mark">BG</div> Black GPT</div>
+    </div>
+    <button class="new-chat-btn" id="new-chat-btn">+ چت جدید</button>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="جستجو در تاریخچه..." autocomplete="off" name="chat-history-search" data-1p-ignore data-lpignore="true">
+    </div>
+    <div class="chat-list" id="chat-list"></div>
+    <div class="sidebar-footer">
+      <div class="user-row" id="user-row">
+        <div class="avatar" id="user-avatar">؟</div>
+        <div class="user-meta">
+          <div class="name" id="user-name">-</div>
+          <div class="role" id="user-role">-</div>
+        </div>
+      </div>
+      <div class="footer-actions">
+        <button class="icon-btn" id="settings-btn" title="تنظیمات">⚙</button>
+        <button class="icon-btn" id="theme-btn" title="تغییر تم">◐</button>
+        <a class="icon-btn" id="admin-link" href="/admin" title="پنل ادمین" style="display:none;text-decoration:none;line-height:1">🛡</a>
+        <button class="icon-btn" id="logout-btn" title="خروج">⏻</button>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="icon-btn circle-open" id="open-sidebar" title="باز کردن منو">☰</button>
+      <button class="icon-btn" id="mobile-menu" title="منو" style="display:none">☰</button>
+      <input class="chat-title-input" id="chat-title" placeholder="چت جدید" disabled>
+      <div class="lm-status" id="lm-status" title="وضعیت LM Studio">
+        <span class="dot" id="lm-dot"></span>
+        <span class="lm-text" id="lm-text">در حال بررسی...</span>
+      </div>
+      <button class="icon-btn" id="chat-settings-btn" title="تنظیمات این چت">⚙</button>
+    </div>
+
+    <div class="messages" id="messages">
+      <div class="messages-inner" id="messages-inner"></div>
+    </div>
+
+    <div class="composer-wrap">
+      <div class="blocked-banner hidden" id="blocked-banner"></div>
+      <div class="composer">
+        <button class="icon-btn" id="attach-btn" title="پیوست فایل">📎</button>
+        <input type="file" id="file-input" class="hidden">
+        <textarea id="input" rows="1" placeholder="پیام خود را بنویسید..." disabled></textarea>
+        <div class="model-picker">
+          <button class="model-btn" id="model-btn">
+            <span class="label" id="model-label">مدل...</span>
+            <span>▾</span>
+          </button>
+          <div class="model-menu hidden" id="model-menu">
+            <div class="menu-title">مدل‌های موجود</div>
+            <div id="model-options"></div>
+          </div>
+        </div>
+        <button class="send-btn" id="send-btn" title="ارسال" disabled>➤</button>
+      </div>
+      <div class="composer-info">
+        <span id="limit-info"></span>
+        <span class="usage" id="usage-info"></span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<!-- Settings modal -->
+<div class="modal-backdrop hidden" id="settings-modal">
+  <div class="modal">
+    <h3>تنظیمات حساب</h3>
+    <label>نام کاربری
+      <input type="text" id="set-username">
+    </label>
+    <label>مدل پیش‌فرض
+      <select id="set-model"><option value="">—</option></select>
+    </label>
+    <label>رمز عبور جدید (خالی = بدون تغییر)
+      <input type="password" id="set-password" placeholder="••••••••">
+    </label>
+    <label>رمز فعلی (برای تغییر رمز لازم است)
+      <input type="password" id="set-current-password" placeholder="••••••••">
+    </label>
+    <div class="modal-actions">
+      <button class="btn-primary" id="save-settings">ذخیره</button>
+      <button class="btn-secondary" id="cancel-settings">انصراف</button>
+    </div>
+    <div id="settings-msg" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+</div>
+
+<!-- Chat settings modal -->
+<div class="modal-backdrop hidden" id="chat-settings-modal">
+  <div class="modal">
+    <h3>تنظیمات این چت</h3>
+    <label>عنوان چت
+      <input type="text" id="cs-title">
+    </label>
+    <label>System Prompt
+      <textarea id="cs-system" rows="4" placeholder="مثلاً: تو یک برنامه‌نویس حرفه‌ای هستی..."></textarea>
+    </label>
+    <label>Temperature <span class="range-val" id="cs-temp-val">0.7</span>
+      <div class="range-row">
+        <input type="range" id="cs-temp" min="0" max="2" step="0.1" value="0.7">
+      </div>
+    </label>
+    <label>Top P <span class="range-val" id="cs-top-p-val">0.95</span>
+      <div class="range-row">
+        <input type="range" id="cs-top-p" min="0" max="1" step="0.05" value="0.95">
+      </div>
+    </label>
+    <label>Max Tokens
+      <input type="number" id="cs-max-tokens" min="64" max="8192" step="64" value="2048">
+    </label>
+    <div class="modal-actions">
+      <button class="btn-primary" id="cs-save">ذخیره</button>
+      <button class="btn-secondary" id="cs-cancel">انصراف</button>
+    </div>
+    <div id="cs-msg" style="margin-top:10px;font-size:13px;"></div>
+  </div>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>
