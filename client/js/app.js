@@ -30,11 +30,15 @@ async function api(url, options = {}) {
 }
 
 function toast(msg) {
-  const el = document.createElement('div');
-  el.id = 'toast';
+  let el = document.getElementById('toast');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast';
+    document.body.appendChild(el);
+  }
   el.textContent = msg;
-  document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2600);
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, 2600);
 }
 
 function escapeHtml(s) {

@@ -1291,6 +1291,7 @@ body.show-search .search-box { display: block; }
   box-shadow: var(--shadow);
   animation: fadeIn .2s ease;
 }
+#toast:empty { display: none !important; }
 
 /* ---------- Responsive ---------- */
 .sidebar-overlay {
