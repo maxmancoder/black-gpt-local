@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#0f172a">
 <title>Black GPT</title>
 <link rel="stylesheet" href="/css/style.css">
 <link rel="manifest" href="/manifest.json">
@@ -17,9 +17,31 @@
 <div class="app">
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <div class="brand"><div class="logo-mark">BG</div> Black GPT</div>
+      <div class="brand">
+        <div class="logo-mark">BG</div>
+        <div>
+          black-gpt-local
+          <span class="brand-sub">Local AI chat</span>
+        </div>
+      </div>
       <button class="icon-btn" id="toggle-sidebar" title="بستن سایدبار"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     </div>
+
+    <nav class="side-nav">
+      <button class="side-nav-item active" id="nav-chat" type="button">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Chat</span>
+      </button>
+      <button class="side-nav-item" id="nav-models" type="button">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg>
+        <span>Models</span>
+      </button>
+      <button class="side-nav-item" id="nav-settings" type="button">
+        <svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
+      </button>
+    </nav>
+
     <button class="new-chat-btn" id="new-chat-btn">+ چت جدید</button>
     <div class="search-box">
       <input type="text" id="search-input" placeholder="جستجو در تاریخچه..." autocomplete="off" name="chat-history-search" data-1p-ignore data-lpignore="true">
@@ -44,23 +66,39 @@
 
   <main class="main">
     <div class="topbar">
+      <div class="model-picker">
+        <button class="model-pill-btn" id="model-btn" type="button">
+          <span class="label" id="model-label">مدل ...</span>
+          <span class="status-tag">active</span>
+          <span class="caret">▾</span>
+        </button>
+        <div class="model-menu hidden" id="model-menu">
+          <div class="menu-title">مدل‌های موجود</div>
+          <div id="model-options"></div>
+        </div>
+      </div>
+
       <button class="topbar-new" id="topbar-new-chat" type="button">
         <span>+</span> <span class="btn-label">چت جدید</span>
       </button>
       <button class="icon-btn circle-open hidden" id="open-sidebar" title="باز کردن منو"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
       <button class="icon-btn" id="mobile-menu" title="منو" style="display:none"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+
       <div class="topbar-center">
         <div class="topbar-brand" id="topbar-brand">
           <div class="logo-mark">BG</div>
-          <span>Black GPT</span>
+          <span>black-gpt-local</span>
         </div>
         <input class="chat-title-input hidden" id="chat-title" placeholder="عنوان چت" disabled>
       </div>
-      <div class="lm-status" id="lm-status" title="وضعیت LM Studio">
-        <span class="lm-text" id="lm-text">در حال بررسی...</span>
-        <span class="dot" id="lm-dot"></span>
+
+      <div class="topbar-right">
+        <div class="lm-status" id="lm-status" title="وضعیت LM Studio">
+          <span class="dot" id="lm-dot"></span>
+          <span class="lm-text" id="lm-text">Local AI</span>
+        </div>
+        <button class="icon-btn" id="chat-settings-btn" title="تنظیمات این چت"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
       </div>
-      <button class="icon-btn" id="chat-settings-btn" title="تنظیمات این چت"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
 
     <div class="messages" id="messages">
@@ -70,16 +108,6 @@
     <div class="composer-wrap">
       <div class="blocked-banner hidden" id="blocked-banner"></div>
       <div class="composer">
-        <div class="model-picker">
-          <button class="model-btn" id="model-btn">
-            <span class="label" id="model-label">مدل ...</span>
-            <span>▾</span>
-          </button>
-          <div class="model-menu hidden" id="model-menu">
-            <div class="menu-title">مدل‌های موجود</div>
-            <div id="model-options"></div>
-          </div>
-        </div>
         <button class="icon-btn" id="attach-btn" title="پیوست فایل"><svg class="nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
         <input type="file" id="file-input" class="hidden">
         <textarea id="input" rows="1" placeholder="پیام خود را بنویسید..." disabled></textarea>

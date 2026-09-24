@@ -3,8 +3,8 @@
   "short_name": "Black GPT",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#212121",
-  "theme_color": "#212121",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
   "description": "Chat with local AI models",
   "icons": [
     {

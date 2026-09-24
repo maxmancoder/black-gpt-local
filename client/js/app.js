@@ -255,10 +255,12 @@ async function loadModels() {
       updateModelLabel();
     }
     $('#lm-dot').classList.toggle('on', data.online);
-    $('#lm-text').textContent = data.online ? `LM Studio: آنلاین` : 'LM Studio: آفلاین';
+    $('#lm-text').textContent = data.online ? 'Local AI' : 'Local AI (off)';
+    $('#lm-status').title = data.online ? 'LM Studio: آنلاین' : 'LM Studio: آفلاین';
   } catch (e) {
     $('#lm-dot').classList.remove('on');
-    $('#lm-text').textContent = 'LM Studio: آفلاین';
+    $('#lm-text').textContent = 'Local AI (off)';
+    $('#lm-status').title = 'LM Studio: آفلاین';
   }
 }
 
@@ -311,6 +313,15 @@ function welcomeHtml() {
     </div>`;
 }
 
+const AI_AVATAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-1 8H9a4 4 0 0 1-1-8V6a4 4 0 0 1 4-4z"/><path d="M9 15v2a3 3 0 0 0 6 0v-2"/><line x1="12" y1="20" x2="12" y2="22"/></svg>';
+
+const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
+
+function streamingHtml() {
+  return '<span class="streaming-label"><span class="spin"></span> Streaming response... <span class="pulse-dots"><span></span><span></span><span></span></span></span>';
+}
+
 function renderMessages() {
   const inner = $('#messages-inner');
   if (!state.messages.length) {
@@ -335,24 +346,52 @@ function messageEl(m) {
   const div = document.createElement('div');
   div.className = `msg ${m.role === 'user' ? 'user' : 'assistant'}`;
   const isUser = m.role === 'user';
+  if (isUser) {
+    div.innerHTML = `
+      <div class="user-bubble">
+        <div class="content" data-role="user">${escapeHtml(m.content)}</div>
+      </div>`;
+    return div;
+  }
   div.innerHTML = `
-    <div class="avatar ${isUser ? '' : 'ai'}">${isUser ? escapeHtml((state.user && state.user.username[0]) || 'U') : 'AI'}</div>
-    <div class="body">
-      <div class="meta">
-        <span>${isUser ? escapeHtml(state.user ? state.user.username : 'شما') : 'AI'}</span>
-        ${!isUser && m.model ? `<span class="model-pill">${escapeHtml(shortModel(m.model))}</span>` : ''}
+    <div class="ai-card">
+      <div class="ai-header">
+        <div class="avatar ai">${AI_AVATAR_SVG}</div>
+        <span class="ai-label">AI response</span>
+        ${m.model ? `<span class="model-pill">${escapeHtml(shortModel(m.model))}</span>` : ''}
+        <div class="ai-actions">
+          <button data-copy title="کپی">${COPY_SVG}</button>
+          <button data-share title="اشتراک‌گذاری">${SHARE_SVG}</button>
+        </div>
       </div>
-      <div class="content" data-role="${m.role}">${isUser ? escapeHtml(m.content) : renderMarkdown(m.content)}</div>
-      ${!isUser ? `<div class="msg-actions"><button data-copy>کپی</button></div>` : ''}
+      <div class="body">
+        <div class="content" data-role="assistant">${renderMarkdown(m.content)}</div>
+        <div class="msg-actions"><button data-copy-text>کپی</button></div>
+      </div>
     </div>`;
   const content = div.querySelector('.content');
-  if (!isUser) enhanceCodeBlocks(content);
-  const copyBtn = div.querySelector('[data-copy]');
-  if (copyBtn) {
-    copyBtn.onclick = async () => {
-      await navigator.clipboard.writeText(m.content);
-      copyBtn.textContent = 'کپی شد';
-      setTimeout(() => (copyBtn.textContent = 'کپی'), 1500);
+  enhanceCodeBlocks(content);
+  const copyHandler = async (btn) => {
+    await navigator.clipboard.writeText(m.content);
+    if (btn.hasAttribute('data-copy-text')) {
+      btn.textContent = 'کپی شد';
+      setTimeout(() => (btn.textContent = 'کپی'), 1500);
+    } else {
+      toast('کپی شد');
+    }
+  };
+  div.querySelectorAll('[data-copy], [data-copy-text]').forEach((btn) => {
+    btn.onclick = () => copyHandler(btn);
+  });
+  const shareBtn = div.querySelector('[data-share]');
+  if (shareBtn) {
+    shareBtn.onclick = async () => {
+      if (navigator.share) {
+        try { await navigator.share({ text: m.content }); } catch (e) {}
+      } else {
+        await navigator.clipboard.writeText(m.content);
+        toast('متن پاسخ کپی شد');
+      }
     };
   }
   return div;
@@ -464,7 +503,9 @@ async function sendMessage() {
     state.messages.push(aiMsg);
     aiEl = messageEl(aiMsg);
     contentEl = aiEl.querySelector('.content');
-    contentEl.innerHTML = '<span class="typing-cursor"></span>';
+    contentEl.innerHTML = streamingHtml();
+    const initialActions = aiEl.querySelector('.msg-actions');
+    if (initialActions) initialActions.classList.add('hidden');
     inner.appendChild(aiEl);
     scrollToBottom();
 
@@ -549,14 +590,18 @@ async function sendMessage() {
       contentEl.classList.remove('typing-cursor');
       contentEl.innerHTML = renderMarkdown(aiMsg.content);
       enhanceCodeBlocks(contentEl);
-      const actions = document.createElement('div');
-      actions.className = 'msg-actions';
-      actions.innerHTML = '<button data-copy>کپی</button>';
-      actions.querySelector('[data-copy]').onclick = async () => {
-        await navigator.clipboard.writeText(aiMsg.content);
-        toast('کپی شد');
-      };
-      aiEl.querySelector('.body').appendChild(actions);
+      const actions = aiEl.querySelector('.msg-actions');
+      if (actions) {
+        actions.classList.remove('hidden');
+        const copyBtn = actions.querySelector('[data-copy-text]');
+        if (copyBtn) {
+          copyBtn.onclick = async () => {
+            await navigator.clipboard.writeText(aiMsg.content);
+            copyBtn.textContent = 'کپی شد';
+            setTimeout(() => (copyBtn.textContent = 'کپی'), 1500);
+          };
+        }
+      }
       scrollToBottom();
     } else {
       contentEl.classList.remove('typing-cursor');
@@ -577,15 +622,16 @@ async function sendMessage() {
         if (aiMsg.content) {
           contentEl.innerHTML = renderMarkdown(aiMsg.content);
           enhanceCodeBlocks(contentEl);
-          if (!aiEl.querySelector('.msg-actions')) {
-            const actions = document.createElement('div');
-            actions.className = 'msg-actions';
-            actions.innerHTML = '<button data-copy>کپی</button>';
-            actions.querySelector('[data-copy]').onclick = async () => {
-              await navigator.clipboard.writeText(aiMsg.content);
-              toast('کپی شد');
-            };
-            aiEl.querySelector('.body').appendChild(actions);
+          const actions = aiEl.querySelector('.msg-actions');
+          if (actions) {
+            actions.classList.remove('hidden');
+            const copyBtn = actions.querySelector('[data-copy-text]');
+            if (copyBtn) {
+              copyBtn.onclick = async () => {
+                await navigator.clipboard.writeText(aiMsg.content);
+                toast('کپی شد');
+              };
+            }
           }
         } else {
           state.messages.pop();
@@ -817,6 +863,37 @@ function init() {
 
   $('#settings-btn').onclick = openSettings;
   $('#chat-settings-btn').onclick = () => openChatSettings();
+
+  const navModels = $('#nav-models');
+  if (navModels) {
+    navModels.onclick = () => {
+      $$('.side-nav-item').forEach((b) => b.classList.remove('active'));
+      navModels.classList.add('active');
+      $('#model-menu').classList.remove('hidden');
+      $('#model-btn').focus();
+    };
+  }
+  const navSettings = $('#nav-settings');
+  if (navSettings) {
+    navSettings.onclick = () => {
+      $$('.side-nav-item').forEach((b) => b.classList.remove('active'));
+      navSettings.classList.add('active');
+      openSettings();
+      setTimeout(() => {
+        $$('.side-nav-item').forEach((b) => b.classList.remove('active'));
+        const chatNav = $('#nav-chat');
+        if (chatNav) chatNav.classList.add('active');
+      }, 100);
+    };
+  }
+  const navChat = $('#nav-chat');
+  if (navChat) {
+    navChat.onclick = () => {
+      $$('.side-nav-item').forEach((b) => b.classList.remove('active'));
+      navChat.classList.add('active');
+      closeSidebarMobile();
+    };
+  }
 
   $('#chat-title').addEventListener('change', async (e) => {
     if (!state.currentChat) return;
