@@ -1085,8 +1085,10 @@ body.show-search .search-box { display: block; }
   padding: 12px 8px;
   font-size: 15px;
   line-height: 1.6;
-  max-height: 200px;
+  height: 48px;
   min-height: 48px;
+  max-height: 48px;
+  overflow-y: auto;
 }
 .composer textarea:disabled { opacity: .5; }
 .composer textarea::placeholder { color: var(--text-muted); }

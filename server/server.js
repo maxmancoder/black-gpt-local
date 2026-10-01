@@ -14,7 +14,15 @@ app.use('/api/models', require('./routes/models'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/admin', require('./routes/admin'));
 
-app.use(express.static(config.clientDir));
+app.use(express.static(config.clientDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store');
+    } else if (/\.(js|css|svg|png|jpg|jpeg|gif|woff2?)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    }
+  }
+}));
 
 app.get('/api/dashboard/config', (req, res) => {
   res.json({ siteName: getSetting('site_name', 'Black GPT') });

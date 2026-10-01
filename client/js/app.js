@@ -89,9 +89,7 @@ function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme);
   const hl = $('#hljs-theme');
   if (hl) {
-    hl.href = theme === 'light'
-      ? 'https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css'
-      : 'https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css';
+    hl.href = theme === 'light' ? '/vendor/github.min.css' : '/vendor/github-dark.min.css';
   }
 }
 
@@ -450,8 +448,7 @@ function newChat() {
 /* ---------- send / stream ---------- */
 function autoResize() {
   const ta = $('#input');
-  ta.style.height = 'auto';
-  ta.style.height = Math.min(ta.scrollHeight, 200) + 'px';
+  ta.style.height = '';
 }
 
 function updateUsageInfo() {
@@ -964,6 +961,5 @@ function init() {
   init();
   await Promise.all([loadChats(), loadModels()]);
   renderMessages();
-  setInterval(loadModels, 30000); // refresh model list periodically
-  setInterval(() => { if (!state.streaming) loadChats($('#search-input').value.trim()); }, 60000);
+  setInterval(loadModels, 60000);
 })();

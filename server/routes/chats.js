@@ -34,21 +34,22 @@ function getChat(id, user) {
 
 router.get('/', (req, res) => {
   const { q = '' } = req.query;
+  const countExpr = '(SELECT COUNT(*) FROM messages m WHERE m.chat_id = c.id) AS message_count';
   let rows;
-  const base = 'FROM chats c WHERE c.user_id = ?';
-  let query;
-  let params;
   if (String(q).trim()) {
-    query = `SELECT DISTINCT c.* ${base} AND (c.title LIKE ? OR EXISTS (
-      SELECT 1 FROM messages m WHERE m.chat_id = c.id AND m.content LIKE ?
-    )) ORDER BY c.updated_at DESC`;
     const like = `%${String(q).trim()}%`;
-    params = [req.user.id, like, like];
+    rows = db
+      .prepare(
+        `SELECT c.*, ${countExpr} FROM chats c WHERE c.user_id = ? AND (c.title LIKE ? OR EXISTS (
+          SELECT 1 FROM messages m WHERE m.chat_id = c.id AND m.content LIKE ?
+        )) ORDER BY c.updated_at DESC`
+      )
+      .all(req.user.id, like, like);
   } else {
-    query = `SELECT * ${base} ORDER BY c.updated_at DESC`;
-    params = [req.user.id];
+    rows = db
+      .prepare(`SELECT c.*, ${countExpr} FROM chats c WHERE c.user_id = ? ORDER BY c.updated_at DESC`)
+      .all(req.user.id);
   }
-  rows = db.prepare(query).all(...params);
   res.json({
     chats: rows.map((c) => ({
       id: c.id,
@@ -56,7 +57,7 @@ router.get('/', (req, res) => {
       model: c.model,
       updated_at: c.updated_at,
       created_at: c.created_at,
-      message_count: db.prepare('SELECT COUNT(*) c FROM messages WHERE chat_id = ?').get(c.id).c
+      message_count: c.message_count
     }))
   });
 });
