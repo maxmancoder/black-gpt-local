@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/admin.css">
-<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
+<link rel="icon" href="/site-icon" id="site-favicon">
 </head>
 <body>
 <div class="admin-app">
@@ -209,6 +209,15 @@
       <div class="panel">
         <label>نام سایت
           <input type="text" id="set-site-name">
+        </label>
+        <label>آیکون سایت
+          <div class="icon-upload-row">
+            <img id="site-icon-preview" src="/site-icon" alt="آیکون سایت" class="site-icon-preview">
+            <div class="icon-upload-controls">
+              <input type="file" id="set-site-icon" accept="image/png,image/jpeg,image/svg+xml,image/x-icon,image/webp,image/gif">
+              <div class="hint-text icon-hint">فرمت‌های مجاز: SVG، PNG، JPG، ICO، WEBP یا GIF (حداکثر ۲ مگابایت)</div>
+            </div>
+          </div>
         </label>
         <label>ثبت‌نام
           <select id="set-allow-reg">

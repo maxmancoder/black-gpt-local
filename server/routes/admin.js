@@ -1,11 +1,53 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
 const { db, getSetting, setSetting, logSystem } = require('../database/database');
 const { requireAdmin } = require('../middleware/auth');
 const lmstudio = require('../services/lmstudio');
+const config = require('../config');
 
 const router = express.Router();
 router.use(requireAdmin);
+
+const siteIconDir = path.join(config.uploadsDir, 'site');
+fs.mkdirSync(siteIconDir, { recursive: true });
+
+const iconStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, siteIconDir),
+  filename: (req, file, cb) => {
+    const extMap = {
+      'image/svg+xml': '.svg',
+      'image/png': '.png',
+      'image/jpeg': '.jpg',
+      'image/x-icon': '.ico',
+      'image/vnd.microsoft.icon': '.ico',
+      'image/webp': '.webp',
+      'image/gif': '.gif'
+    };
+    let ext = extMap[file.mimetype];
+    if (!ext) {
+      const raw = path.extname(file.originalname || '').toLowerCase();
+      if (['.svg', '.png', '.jpg', '.jpeg', '.ico', '.webp', '.gif'].includes(raw)) {
+        ext = raw === '.jpeg' ? '.jpg' : raw;
+      }
+    }
+    cb(null, 'site-icon' + (ext || '.png'));
+  }
+});
+
+const iconUpload = multer({
+  storage: iconStorage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const okMime = ['image/svg+xml', 'image/png', 'image/jpeg', 'image/x-icon', 'image/vnd.microsoft.icon', 'image/webp', 'image/gif'].includes(file.mimetype);
+    const rawExt = path.extname(file.originalname || '').toLowerCase();
+    const okExt = ['.svg', '.png', '.jpg', '.jpeg', '.ico', '.webp', '.gif'].includes(rawExt);
+    if (okMime || okExt) return cb(null, true);
+    cb(new Error('فرمت آیکون مجاز نیست. از SVG، PNG، JPG، ICO، WEBP یا GIF استفاده کنید'));
+  }
+});
 
 function stats() {
   return {
@@ -273,12 +315,37 @@ router.get('/settings', (req, res) => {
   res.json({
     settings: {
       site_name: getSetting('site_name', 'Black GPT'),
+      site_icon: getSetting('site_icon', ''),
       allow_registration: getSetting('allow_registration', 'true'),
       default_system_prompt: getSetting('default_system_prompt', ''),
       default_temperature: getSetting('default_temperature', '0.7'),
       default_max_tokens: getSetting('default_max_tokens', '2048'),
       max_context_messages: getSetting('max_context_messages', '40')
     }
+  });
+});
+
+router.post('/settings/icon', (req, res) => {
+  iconUpload.single('icon')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'حجم آیکون نباید بیشتر از ۲ مگابایت باشد' });
+      return res.status(400).json({ error: err.message || 'خطا در بارگذاری آیکون' });
+    }
+    if (!req.file) return res.status(400).json({ error: 'فایلی انتخاب نشده است' });
+
+    const newName = req.file.filename;
+    try {
+      const files = fs.readdirSync(siteIconDir);
+      for (const f of files) {
+        if (f !== newName && f.startsWith('site-icon')) {
+          fs.unlinkSync(path.join(siteIconDir, f));
+        }
+      }
+    } catch (e) {}
+
+    setSetting('site_icon', newName);
+    logSystem(req.user.id, 'admin_update_site_icon', newName);
+    res.json({ ok: true, icon: '/site-icon?v=' + Date.now(), filename: newName });
   });
 });
 

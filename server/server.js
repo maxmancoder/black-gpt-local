@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const config = require('./config');
 const { db, getSetting } = require('./database/database');
@@ -13,6 +14,57 @@ app.use('/api/chats', require('./routes/chats'));
 app.use('/api/models', require('./routes/models'));
 app.use('/api/files', require('./routes/files'));
 app.use('/api/admin', require('./routes/admin'));
+
+function getSiteIconPath() {
+  const stored = getSetting('site_icon', '');
+  if (stored) {
+    const p = path.join(config.uploadsDir, 'site', stored);
+    if (fs.existsSync(p)) return p;
+  }
+  return path.join(config.clientDir, 'assets', 'icon.svg');
+}
+
+function getSiteIconType(filePath) {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.svg') return 'image/svg+xml';
+  if (ext === '.png') return 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
+  if (ext === '.ico') return 'image/x-icon';
+  if (ext === '.webp') return 'image/webp';
+  if (ext === '.gif') return 'image/gif';
+  return 'application/octet-stream';
+}
+
+app.get('/site-icon', (req, res) => {
+  const filePath = getSiteIconPath();
+  res.setHeader('Content-Type', getSiteIconType(filePath));
+  res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate');
+  res.sendFile(filePath);
+});
+
+app.get('/manifest.json', (req, res) => {
+  const filePath = getSiteIconPath();
+  const type = getSiteIconType(filePath);
+  res.setHeader('Content-Type', 'application/manifest+json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.json({
+    name: 'Black GPT',
+    short_name: 'Black GPT',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#08090A',
+    theme_color: '#08090A',
+    description: 'Local AI workspace powered by LM Studio',
+    icons: [
+      {
+        src: '/site-icon',
+        sizes: 'any',
+        type,
+        purpose: 'any'
+      }
+    ]
+  });
+});
 
 app.use(express.static(config.clientDir, {
   setHeaders: (res, filePath) => {

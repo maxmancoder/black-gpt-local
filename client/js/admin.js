@@ -380,6 +380,8 @@ async function loadSettings() {
   $('#set-system').value = s.default_system_prompt;
   $('#set-temp').value = s.default_temperature;
   $('#set-ctx').value = s.max_context_messages;
+  const preview = $('#site-icon-preview');
+  if (preview) preview.src = '/site-icon?v=' + Date.now();
 }
 
 $('#save-site-settings').onclick = async () => {
@@ -402,6 +404,38 @@ $('#save-site-settings').onclick = async () => {
     $('#site-settings-msg').style.color = 'var(--danger)';
   }
 };
+
+const iconInput = $('#set-site-icon');
+if (iconInput) {
+  iconInput.onchange = async () => {
+    const file = iconInput.files && iconInput.files[0];
+    if (!file) return;
+    const msg = $('#site-settings-msg');
+    msg.textContent = 'در حال بارگذاری آیکون...';
+    msg.style.color = 'var(--text-secondary)';
+    try {
+      const fd = new FormData();
+      fd.append('icon', file);
+      const res = await fetch('/api/admin/settings/icon', { method: 'POST', body: fd });
+      if (res.status === 401) { location.href = '/login'; return; }
+      if (res.status === 403) { location.href = '/'; return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'خطا در بارگذاری آیکون');
+      const preview = $('#site-icon-preview');
+      if (preview) preview.src = data.icon || ('/site-icon?v=' + Date.now());
+      const fav = document.getElementById('site-favicon');
+      if (fav) fav.href = '/site-icon?v=' + Date.now();
+      msg.textContent = 'آیکون سایت بروزرسانی شد ✓';
+      msg.style.color = 'var(--accent)';
+      toast('آیکون سایت بروزرسانی شد');
+    } catch (e) {
+      msg.textContent = e.message;
+      msg.style.color = 'var(--danger)';
+    } finally {
+      iconInput.value = '';
+    }
+  };
+}
 
 /* ---------- boot ---------- */
 (async function boot() {

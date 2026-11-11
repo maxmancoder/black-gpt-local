@@ -298,6 +298,38 @@
 }
 .panel input:focus, .panel textarea:focus, .panel select:focus { border-color: var(--text-muted); }
 
+.icon-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+.site-icon-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+  object-fit: contain;
+  padding: 10px;
+  flex-shrink: 0;
+}
+.icon-upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.icon-upload-controls input[type="file"] {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  max-width: 100%;
+}
+.icon-hint {
+  margin-bottom: 0;
+  font-size: 12px;
+}
+
 @media (max-width: 900px) {
   .admin-app { flex-direction: column; }
   .admin-sidebar {
