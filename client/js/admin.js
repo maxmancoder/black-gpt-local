@@ -58,8 +58,10 @@ $$('.nav-item[data-tab]').forEach((btn) => {
 function loadTab(tab) {
   if (tab === 'dashboard') loadStats();
   if (tab === 'users') loadUsers();
+  if (tab === 'reg-requests') loadRegisterRequests();
   if (tab === 'chats') loadChats();
   if (tab === 'models') loadModelsAdmin();
+  if (tab === 'model-perms') loadModelsAdmin();
   if (tab === 'usage') loadUsage();
   if (tab === 'logs') loadLogs();
   if (tab === 'settings') loadSettings();
@@ -99,8 +101,6 @@ async function loadRegisterRequests() {
   try {
     const data = await api('/api/admin/register-requests');
     const list = data.requests || [];
-    const pending = list.filter((r) => r.status === 'pending');
-    $('#reg-requests-panel').style.display = pending.length || list.length ? '' : 'none';
     const tbody = $('#reg-requests-table tbody');
     if (!list.length) {
       tbody.innerHTML = '<tr><td colspan="4">درخواستی وجود ندارد</td></tr>';

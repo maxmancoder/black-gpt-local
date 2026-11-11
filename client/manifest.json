@@ -3,9 +3,9 @@
   "short_name": "Black GPT",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "description": "Chat with local AI models",
+  "background_color": "#08090A",
+  "theme_color": "#08090A",
+  "description": "Local AI workspace powered by LM Studio",
   "icons": [
     {
       "src": "/assets/icon.svg",

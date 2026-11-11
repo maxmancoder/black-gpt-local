@@ -155,11 +155,12 @@ async function loadChats(q = '') {
 function groupLabel(dateStr) {
   const d = new Date(dateStr + (dateStr.includes('Z') || dateStr.includes('+') ? '' : 'Z'));
   const now = new Date();
-  const diff = (now - d) / 86400000;
-  if (diff < 1 && d.getDate() === now.getDate()) return 'امروز';
-  if (diff < 7) return '۷ روز اخیر';
-  if (diff < 30) return '۳۰ روز اخیر';
-  return 'قدیمی‌تر';
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const thatDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today - thatDay) / 86400000);
+  if (diffDays <= 0) return 'امروز';
+  if (diffDays === 1) return 'دیروز';
+  return 'گفتگوهای قبلی';
 }
 
 function renderChatList() {
@@ -247,41 +248,52 @@ function showContextMenu(e, chatId) {
 
 /* ---------- models ---------- */
 async function loadModels() {
+  const el = $('#model-options');
+  if (el && !state.models.length) {
+    el.innerHTML = '<div class="model-option disabled">در حال بارگذاری...</div>';
+  }
   try {
     const data = await api('/api/models');
     state.models = data.models.filter((m) => m.enabled);
-    renderModelMenu();
     if (!state.model && state.models.length) {
       const preferred = (state.user && state.user.default_model) || (state.currentChat && state.currentChat.model);
       state.model = (preferred && state.models.find((m) => m.id === preferred) && preferred) || state.models[0].id;
-      updateModelLabel();
     }
+    updateModelLabel();
+    renderModelMenu();
     $('#lm-dot').classList.toggle('on', data.online);
-    $('#lm-text').textContent = data.online ? 'Local AI' : 'Local AI (off)';
-    $('#lm-status').title = data.online ? 'LM Studio: آنلاین' : 'LM Studio: آفلاین';
+    $('#lm-text').textContent = data.online ? 'متصل' : 'قطع';
+    $('#lm-status').title = data.online ? 'LM Studio: متصل' : 'LM Studio: قطع';
   } catch (e) {
     $('#lm-dot').classList.remove('on');
-    $('#lm-text').textContent = 'Local AI (off)';
-    $('#lm-status').title = 'LM Studio: آفلاین';
+    $('#lm-text').textContent = 'قطع';
+    $('#lm-status').title = 'LM Studio: قطع';
+    renderModelMenu(e);
   }
 }
 
-function renderModelMenu() {
+function renderModelMenu(err) {
   const el = $('#model-options');
-  if (!state.models.length) {
-    el.innerHTML = '<div class="model-option disabled">مدلی موجود نیست</div>';
-    return;
-  }
-  el.innerHTML = state.models
-    .map(
-      (m) => `
+  if (!el) return;
+  let html = '';
+  if (err) {
+    html += '<div class="model-option disabled">خطا در دریافت مدل‌ها</div>';
+  } else if (!state.models.length) {
+    html += '<div class="model-option disabled">مدلی در دسترس نیست</div>';
+  } else {
+    html += state.models
+      .map(
+        (m) => `
     <div class="model-option ${m.id === state.model ? 'selected' : ''}" data-model="${escapeHtml(m.id)}">
       <span>${escapeHtml(m.name)}</span>
       ${m.id === state.model ? '<span>✓</span>' : ''}
     </div>`
-    )
-    .join('');
-  el.querySelectorAll('.model-option').forEach((opt) => {
+      )
+      .join('');
+  }
+  html += `<div class="model-option" data-refresh="1" style="margin-top:4px;border-top:1px solid var(--border-soft);justify-content:center;color:var(--text-secondary)">بروزرسانی فهرست</div>`;
+  el.innerHTML = html;
+  el.querySelectorAll('.model-option[data-model]').forEach((opt) => {
     opt.addEventListener('click', () => {
       state.model = opt.dataset.model;
       updateModelLabel();
@@ -292,36 +304,42 @@ function renderModelMenu() {
       }
     });
   });
+  const refresh = el.querySelector('[data-refresh]');
+  if (refresh) {
+    refresh.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      el.innerHTML = '<div class="model-option disabled">در حال بارگذاری...</div>';
+      await loadModels();
+    });
+  }
 }
 
 function updateModelLabel() {
   const m = state.models.find((x) => x.id === state.model);
-  $('#model-label').textContent = m ? shortModel(m.id) : 'مدلی نیست';
+  $('#model-label').textContent = m ? shortModel(m.id) : (state.models.length ? 'انتخاب مدل' : 'مدلی یافت نشد');
 }
 
 /* ---------- messages ---------- */
 function welcomeHtml() {
   return `
     <div class="empty-state">
-      <div class="hero-logo">BG</div>
-      <h2>Black GPT</h2>
-      <p class="tagline">با مدل‌های هوش مصنوعی لوکال خودتان چت کنید</p>
+      <h2>هوش مصنوعی، با قدرت مدل‌های خودت.</h2>
+      <p class="tagline">با مدل‌های محلی خودت گفتگو کن، کدنویسی کن و ایده‌هایت را توسعه بده.</p>
       <div class="hints">
-        <button class="hint-chip hint-idea" data-hint="ایده برای پروژه دانشگاهی در هوش مصنوعی بده">💡 ایده‌پردازی</button>
-        <button class="hint-chip hint-write" data-hint="درباره فواید ورزش صبحگاهی یک متن کوتاه بنویس">✍️ متن‌نویسی</button>
-        <button class="hint-chip hint-code" data-hint="کد فیبوناچی در جاوااسکریپت بنویس با توضیح">💻 نوشتن کد</button>
-        <button class="hint-chip hint-email" data-hint="یک ایمیل رسمی برای درخواست مرخصی بنویس">✉️ نوشتن ایمیل</button>
+        <button class="hint-chip" data-hint="برای من یک API با Node.js طراحی کن.">برای من یک API با Node.js طراحی کن.</button>
+        <button class="hint-chip" data-hint="یک کد Python را تحلیل و بهینه‌سازی کن.">یک کد Python را تحلیل و بهینه‌سازی کن.</button>
+        <button class="hint-chip" data-hint="معماری یک پروژه نرم‌افزاری را بررسی کن.">معماری یک پروژه نرم‌افزاری را بررسی کن.</button>
       </div>
     </div>`;
 }
 
-const AI_AVATAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-1 8H9a4 4 0 0 1-1-8V6a4 4 0 0 1 4-4z"/><path d="M9 15v2a3 3 0 0 0 6 0v-2"/><line x1="12" y1="20" x2="12" y2="22"/></svg>';
+const AI_AVATAR_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M5 16l.75 2.25L8 19l-2.25.75L5 22l-.75-2.25L2 19l2.25-.75L5 16z"/><path d="M18 14l.75 2.25L21 17l-2.25.75L18 20l-.75-2.25L15 17l2.25-.75L18 14z"/></svg>';
 
 const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const SHARE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>';
 
 function streamingHtml() {
-  return '<span class="streaming-label"><span class="spin"></span> Streaming response... <span class="pulse-dots"><span></span><span></span><span></span></span></span>';
+  return '<span class="streaming-label"><span class="spin"></span> در حال تولید پاسخ...</span>';
 }
 
 function renderMessages() {
@@ -359,16 +377,16 @@ function messageEl(m) {
     <div class="ai-card">
       <div class="ai-header">
         <div class="avatar ai">${AI_AVATAR_SVG}</div>
-        <span class="ai-label">AI response</span>
+        <span class="ai-label">دستیار</span>
         ${m.model ? `<span class="model-pill">${escapeHtml(shortModel(m.model))}</span>` : ''}
         <div class="ai-actions">
-          <button data-copy title="کپی">${COPY_SVG}</button>
+          <button data-copy title="کپی پاسخ">${COPY_SVG}</button>
           <button data-share title="اشتراک‌گذاری">${SHARE_SVG}</button>
         </div>
       </div>
       <div class="body">
         <div class="content" data-role="assistant">${renderMarkdown(m.content)}</div>
-        <div class="msg-actions"><button data-copy-text>کپی</button></div>
+        <div class="msg-actions"><button data-copy-text>کپی پاسخ</button></div>
       </div>
     </div>`;
   const content = div.querySelector('.content');
@@ -448,7 +466,12 @@ function newChat() {
 /* ---------- send / stream ---------- */
 function autoResize() {
   const ta = $('#input');
-  ta.style.height = '';
+  if (!ta) return;
+  ta.style.height = 'auto';
+  const max = 160;
+  const h = Math.min(ta.scrollHeight, max);
+  ta.style.height = h + 'px';
+  ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
 }
 
 function updateUsageInfo() {
@@ -664,14 +687,16 @@ function setSendButton(streaming) {
   const btn = $('#send-btn');
   if (streaming) {
     btn.classList.add('stop');
-    btn.innerHTML = '■';
+    btn.innerHTML = '<svg class="send-ico" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="1.5"/></svg>';
     btn.disabled = false;
-    btn.title = 'توقف';
+    btn.title = 'توقف تولید';
+    btn.setAttribute('aria-label', 'توقف تولید');
   } else {
     btn.classList.remove('stop');
-    btn.innerHTML = '<svg class="send-ico" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>';
+    btn.innerHTML = '<svg class="send-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>';
     btn.disabled = !$('#input').value.trim();
     btn.title = 'ارسال';
+    btn.setAttribute('aria-label', 'ارسال');
   }
 }
 

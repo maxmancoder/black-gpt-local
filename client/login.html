@@ -3,21 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#08090A">
+<meta name="color-scheme" content="dark light">
 <title>ورود — Black GPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
 </head>
 <body class="auth-body">
 <div class="auth-card">
   <div class="auth-logo">
     <div class="logo-mark">BG</div>
     <h1>Black GPT</h1>
-    <p class="auth-sub">با مدل‌های هوش مصنوعی لوکال خودتان چت کنید</p>
+    <p class="auth-sub">با مدل‌های هوش مصنوعی محلی خود گفتگو کنید، کد بنویسید و ایده‌هایتان را توسعه دهید.</p>
   </div>
 
-  <div class="auth-tabs">
-    <button id="tab-login" class="auth-tab active" type="button">ورود</button>
-    <button id="tab-register" class="auth-tab" type="button">ثبت‌نام</button>
+  <div class="auth-tabs" role="tablist">
+    <button id="tab-login" class="auth-tab active" type="button" role="tab" aria-selected="true">ورود</button>
+    <button id="tab-register" class="auth-tab" type="button" role="tab" aria-selected="false">ثبت‌نام</button>
   </div>
 
   <form id="login-form" class="auth-form">
@@ -31,16 +37,16 @@
   </form>
 
   <form id="register-form" class="auth-form hidden">
-    <label>نام کاربری (انگلیسی)
+    <label>نام کاربری
       <input type="text" id="reg-user" autocomplete="username" required>
     </label>
     <label>رمز عبور
       <input type="password" id="reg-pass" autocomplete="new-password" required>
     </label>
-    <button type="submit" class="btn-primary">ساخت حساب</button>
+    <button type="submit" class="btn-primary">ایجاد حساب</button>
   </form>
 
-  <div id="auth-error" class="auth-error hidden"></div>
+  <div id="auth-error" class="auth-error hidden" role="alert"></div>
 </div>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -53,6 +59,8 @@ const errBox = $('#auth-error');
 function showTab(tab) {
   tabLogin.classList.toggle('active', tab === 'login');
   tabRegister.classList.toggle('active', tab === 'register');
+  tabLogin.setAttribute('aria-selected', tab === 'login');
+  tabRegister.setAttribute('aria-selected', tab === 'register');
   loginForm.classList.toggle('hidden', tab !== 'login');
   registerForm.classList.toggle('hidden', tab !== 'register');
   errBox.classList.add('hidden');
@@ -99,12 +107,16 @@ registerForm.onsubmit = async (e) => {
       password: $('#reg-pass').value
     });
     if (data && data.pending) {
-      errBox.textContent = data.message || 'درخواست ثبت نام شما به ادمین فرستاده شد! منتظر بمانید و بعدا با این اطلاعات، روی ورود بزنید.';
-      errBox.style.color = 'var(--accent, #10a37f)';
+      errBox.textContent = data.message || 'درخواست ثبت‌نام شما برای بررسی ارسال شد. پس از تأیید می‌توانید وارد شوید.';
+      errBox.style.color = 'var(--accent)';
+      errBox.style.borderColor = 'var(--border)';
+      errBox.style.background = 'var(--bg-tertiary)';
       errBox.classList.remove('hidden');
       setTimeout(() => {
         showTab('login');
         errBox.style.color = '';
+        errBox.style.borderColor = '';
+        errBox.style.background = '';
       }, 5000);
       return;
     }

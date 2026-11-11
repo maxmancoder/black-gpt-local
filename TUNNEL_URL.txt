@@ -1,4 +1,4 @@
-﻿Public URL: https://accessing-healthy-jane-preceding.trycloudflare.com
-Mode: Cloudflare
-Started: 2026-10-01T09:25:07.3995073+03:30
+﻿Public URL: http://localhost:3000
+Mode: Local only
+Started: 2026-10-01T18:11:32.0662430+03:30
 Local: http://localhost:3000
