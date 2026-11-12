@@ -323,12 +323,41 @@ function updateModelLabel() {
 function welcomeHtml() {
   return `
     <div class="empty-state">
+      <div class="hero-logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.6 5.6 1.9-5.6 1.9L12 18l-1.9-5.6L4.5 10.5l5.6-1.9L12 3z"/><path d="M19 15.4l.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8.8-2.3z"/></svg>
+      </div>
+      <div class="hero-eyebrow"><span class="eyebrow-dot"></span> Local AI Workspace</div>
       <h2>هوش مصنوعی، با قدرت مدل‌های خودت.</h2>
       <p class="tagline">با مدل‌های محلی خودت گفتگو کن، کدنویسی کن و ایده‌هایت را توسعه بده.</p>
       <div class="hints">
-        <button class="hint-chip" data-hint="برای من یک API با Node.js طراحی کن.">برای من یک API با Node.js طراحی کن.</button>
-        <button class="hint-chip" data-hint="یک کد Python را تحلیل و بهینه‌سازی کن.">یک کد Python را تحلیل و بهینه‌سازی کن.</button>
-        <button class="hint-chip" data-hint="معماری یک پروژه نرم‌افزاری را بررسی کن.">معماری یک پروژه نرم‌افزاری را بررسی کن.</button>
+        <button class="hint-chip hint-card" data-hint="برای من یک API با Node.js طراحی کن.">
+          <span class="hint-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
+          <span class="hint-copy">
+            <span class="hint-title">طراحی API با Node.js</span>
+            <span class="hint-desc">یک API امن و مقیاس‌پذیر برای پروژه‌ات بساز.</span>
+          </span>
+        </button>
+        <button class="hint-chip hint-card" data-hint="یک کد Python را تحلیل و بهینه‌سازی کن.">
+          <span class="hint-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg></span>
+          <span class="hint-copy">
+            <span class="hint-title">بهینه‌سازی کد Python</span>
+            <span class="hint-desc">کدت را تحلیل کن و سریع‌تر و تمیزترش کن.</span>
+          </span>
+        </button>
+        <button class="hint-chip hint-card" data-hint="معماری یک پروژه نرم‌افزاری را بررسی کن.">
+          <span class="hint-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span>
+          <span class="hint-copy">
+            <span class="hint-title">بررسی معماری پروژه</span>
+            <span class="hint-desc">ساختار پروژه را بررسی و بهترین مسیر را پیدا کن.</span>
+          </span>
+        </button>
+        <button class="hint-chip hint-card" data-hint="برای پروژه‌ی من چند ایده‌ی خلاقانه پیشنهاد بده.">
+          <span class="hint-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg></span>
+          <span class="hint-copy">
+            <span class="hint-title">ایده‌پردازی و تولید محتوا</span>
+            <span class="hint-desc">از یک ایده‌ی خام تا متن نهایی، همراهت هستم.</span>
+          </span>
+        </button>
       </div>
     </div>`;
 }
