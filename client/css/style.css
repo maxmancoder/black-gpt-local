@@ -1444,30 +1444,56 @@ a { color: var(--accent); }
 [data-theme="light"] .hljs-title, [data-theme="light"] .hljs-function { color: #6f42c1; }
 [data-theme="light"] .hljs-type, [data-theme="light"] .hljs-built_in { color: #e36209; }
 
-/* ---------- Theme toggle ripple ---------- */
+/* ---------- Theme toggle wipe (background only) ---------- */
 .theme-ripple {
   position: fixed;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 2147483000;
+  z-index: 0;
   background: #090A0C;
   transform: scale(0.02);
   transform-origin: center center;
-  will-change: transform, opacity;
+  will-change: transform;
 }
 .theme-ripple--light { background: #F6F8FB; }
 .theme-ripple--expand {
   animation: theme-ripple-expand 1000ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
-.theme-ripple--fade {
-  opacity: 0;
-  transition: opacity 180ms ease-out;
-}
 @keyframes theme-ripple-expand {
   from { transform: scale(0.02); }
   to { transform: scale(1); }
 }
+
+/* While wiping, the page surfaces become transparent so the circle runs on
+   the background only. The content stays above it and changes theme at the end. */
+html.theme-wiping .app {
+  background:
+    radial-gradient(900px 520px at 50% -12%, rgba(46, 155, 255, 0.10), transparent 65%),
+    radial-gradient(760px 460px at 92% 108%, rgba(46, 155, 255, 0.055), transparent 62%),
+    var(--bg);
+}
+html.theme-wiping[data-theme="light"] .app {
+  background:
+    radial-gradient(900px 520px at 50% -12%, rgba(22, 131, 240, 0.10), transparent 65%),
+    radial-gradient(760px 460px at 92% 108%, rgba(22, 131, 240, 0.05), transparent 62%),
+    var(--bg);
+}
+html.theme-wiping .main,
+html.theme-wiping .sidebar { background: transparent; }
+html.theme-wiping .main { z-index: 1; }
+html.theme-wiping .sidebar { z-index: 41; }
+
+/* Smoothly cross-fade the content colors once the background is covered. */
+html.theme-colors-fade .app,
+html.theme-colors-fade .app * {
+  transition:
+    background-color 220ms ease,
+    color 220ms ease,
+    border-color 220ms ease,
+    fill 220ms ease,
+    stroke 220ms ease !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .theme-ripple--expand { animation-duration: 0.01ms !important; }
-  .theme-ripple--fade { transition-duration: 0.01ms !important; }
 }

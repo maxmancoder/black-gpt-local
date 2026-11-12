@@ -96,8 +96,8 @@ function applyTheme(theme) {
 const THEME_RIPPLE_MS = 1000;
 let themeTransitioning = false;
 
-// Expands a circle from the exact center of the toggle button, then swaps the
-// theme while the screen is fully covered and fades the circle out.
+// Expands a circle from the exact center of the toggle button on the page
+// background only, then swaps the theme once the background is fully covered.
 function animateThemeChange(button, next) {
   return new Promise((resolve) => {
     const rect = button.getBoundingClientRect();
@@ -115,18 +115,22 @@ function animateThemeChange(button, next) {
     ripple.style.height = `${radius * 2}px`;
     ripple.style.left = `${cx - radius}px`;
     ripple.style.top = `${cy - radius}px`;
-    document.body.appendChild(ripple);
+    document.documentElement.classList.add('theme-wiping');
+    (document.querySelector('.app') || document.body).appendChild(ripple);
 
     let finished = false;
     const finish = () => {
       if (finished) return;
       finished = true;
+      const root = document.documentElement;
+      root.classList.add('theme-colors-fade');
       applyTheme(next);
-      ripple.classList.add('theme-ripple--fade');
+      // Let the content colors cross-fade while the circle still covers the background.
       setTimeout(() => {
         ripple.remove();
+        root.classList.remove('theme-wiping', 'theme-colors-fade');
         resolve();
-      }, 190);
+      }, 220);
     };
 
     // Commit the starting scale before triggering the animation.
