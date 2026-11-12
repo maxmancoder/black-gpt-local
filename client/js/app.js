@@ -93,57 +93,76 @@ function applyTheme(theme) {
   }
 }
 
-const THEME_RIPPLE_MS = 1000;
+const THEME_TRANSITION_MS = 1000;
 let themeTransitioning = false;
 
 // Expands a circle from the exact center of the toggle button on the page
-// background only, then swaps the theme once the background is fully covered.
-function animateThemeChange(button, next) {
-  return new Promise((resolve) => {
-    const rect = button.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top + rect.height / 2;
-    const radius = Math.hypot(
-      Math.max(cx, window.innerWidth - cx),
-      Math.max(cy, window.innerHeight - cy)
-    ) + 12;
+// background. Every detail (text, buttons, icons, surfaces) transitions to the
+// next theme over the same duration, so the whole UI changes with the circle.
+async function animateThemeChange(button, next) {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion) {
+    applyTheme(next);
+    return;
+  }
 
-    const ripple = document.createElement('span');
-    ripple.className = 'theme-ripple' + (next === 'light' ? ' theme-ripple--light' : '');
-    ripple.setAttribute('aria-hidden', 'true');
-    ripple.style.width = `${radius * 2}px`;
-    ripple.style.height = `${radius * 2}px`;
-    ripple.style.left = `${cx - radius}px`;
-    ripple.style.top = `${cy - radius}px`;
-    document.documentElement.classList.add('theme-wiping');
-    (document.querySelector('.app') || document.body).appendChild(ripple);
+  const rect = button.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  const radius = Math.hypot(
+    Math.max(cx, window.innerWidth - cx),
+    Math.max(cy, window.innerHeight - cy)
+  ) + 12;
 
+  const root = document.documentElement;
+  const app = document.querySelector('.app') || document.body;
+  const main = document.querySelector('.main');
+
+  // Freeze the current background so the circle is the only thing revealing
+  // the next theme's background.
+  if (main) {
+    const bg = getComputedStyle(main);
+    app.style.backgroundImage = bg.backgroundImage;
+    app.style.backgroundColor = bg.backgroundColor;
+  }
+  root.classList.add('theme-wiping');
+
+  const ripple = document.createElement('span');
+  ripple.className = 'theme-ripple' + (next === 'light' ? ' theme-ripple--light' : '');
+  ripple.setAttribute('aria-hidden', 'true');
+  ripple.style.width = `${radius * 2}px`;
+  ripple.style.height = `${radius * 2}px`;
+  ripple.style.left = `${cx - radius}px`;
+  ripple.style.top = `${cy - radius}px`;
+  app.appendChild(ripple);
+
+  // Switch the theme and let every detail transition to the new colors over the
+  // same duration as the circle, so the whole UI changes together with it.
+  root.classList.add('theme-detail-fade');
+  // Commit starting styles so transitions run from the old theme values.
+  void app.offsetWidth;
+  applyTheme(next);
+
+  void ripple.offsetWidth;
+  requestAnimationFrame(() => ripple.classList.add('theme-ripple--expand'));
+
+  await new Promise((resolve) => {
     let finished = false;
     const finish = () => {
       if (finished) return;
       finished = true;
-      const root = document.documentElement;
-      root.classList.add('theme-colors-fade');
-      applyTheme(next);
-      // Let the content colors cross-fade while the circle still covers the background.
-      setTimeout(() => {
-        ripple.remove();
-        root.classList.remove('theme-wiping', 'theme-colors-fade');
-        resolve();
-      }, 220);
+      ripple.remove();
+      root.classList.remove('theme-wiping', 'theme-detail-fade');
+      app.style.backgroundImage = '';
+      app.style.backgroundColor = '';
+      resolve();
     };
-
-    // Commit the starting scale before triggering the animation.
-    void ripple.offsetWidth;
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => ripple.classList.add('theme-ripple--expand'));
-    });
 
     ripple.addEventListener('animationend', (event) => {
       if (event.animationName === 'theme-ripple-expand') finish();
     });
     // Safety net in case animationend never fires.
-    setTimeout(finish, THEME_RIPPLE_MS + 150);
+    setTimeout(finish, THEME_TRANSITION_MS + 200);
   });
 }
 
@@ -962,11 +981,9 @@ function init() {
   $('#theme-btn').onclick = async () => {
     if (themeTransitioning) return;
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     themeTransitioning = true;
     try {
-      if (reduceMotion) applyTheme(next);
-      else await animateThemeChange($('#theme-btn'), next);
+      await animateThemeChange($('#theme-btn'), next);
     } finally {
       themeTransitioning = false;
     }

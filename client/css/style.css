@@ -1444,7 +1444,7 @@ a { color: var(--accent); }
 [data-theme="light"] .hljs-title, [data-theme="light"] .hljs-function { color: #6f42c1; }
 [data-theme="light"] .hljs-type, [data-theme="light"] .hljs-built_in { color: #e36209; }
 
-/* ---------- Theme toggle wipe (background only) ---------- */
+/* ---------- Theme toggle (circle on the background) ---------- */
 .theme-ripple {
   position: fixed;
   border-radius: 50%;
@@ -1464,34 +1464,35 @@ a { color: var(--accent); }
   to { transform: scale(1); }
 }
 
-/* While wiping, the page surfaces become transparent so the circle runs on
-   the background only. The content stays above it and changes theme at the end. */
-html.theme-wiping .app {
-  background:
-    radial-gradient(900px 520px at 50% -12%, rgba(46, 155, 255, 0.10), transparent 65%),
-    radial-gradient(760px 460px at 92% 108%, rgba(46, 155, 255, 0.055), transparent 62%),
-    var(--bg);
-}
-html.theme-wiping[data-theme="light"] .app {
-  background:
-    radial-gradient(900px 520px at 50% -12%, rgba(22, 131, 240, 0.10), transparent 65%),
-    radial-gradient(760px 460px at 92% 108%, rgba(22, 131, 240, 0.05), transparent 62%),
-    var(--bg);
-}
+/* The circle sits behind the content: page surfaces become transparent
+   immediately while it expands, so only the background is wiped. */
 html.theme-wiping .main,
-html.theme-wiping .sidebar { background: transparent; }
+html.theme-wiping .sidebar {
+  background: transparent !important;
+  background-image: none !important;
+  transition: none !important;
+}
 html.theme-wiping .main { z-index: 1; }
 html.theme-wiping .sidebar { z-index: 41; }
 
-/* Smoothly cross-fade the content colors once the background is covered. */
-html.theme-colors-fade .app,
-html.theme-colors-fade .app * {
+/* Every detail (text, buttons, icons, borders, surfaces) shifts to the next
+   theme over the same duration as the circle. Surface containers stay transparent
+   so the circle remains visible behind the content. */
+html.theme-detail-fade .app,
+html.theme-detail-fade .app * {
   transition:
-    background-color 220ms ease,
-    color 220ms ease,
-    border-color 220ms ease,
-    fill 220ms ease,
-    stroke 220ms ease !important;
+    background-color 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    fill 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke 1000ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 1000ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+html.theme-detail-fade.theme-wiping .main,
+html.theme-detail-fade.theme-wiping .sidebar {
+  background: transparent !important;
+  background-image: none !important;
+  transition: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
