@@ -93,6 +93,56 @@ function applyTheme(theme) {
   }
 }
 
+const THEME_RIPPLE_MS = 1000;
+let themeTransitioning = false;
+
+// Expands a circle from the exact center of the toggle button, then swaps the
+// theme while the screen is fully covered and fades the circle out.
+function animateThemeChange(button, next) {
+  return new Promise((resolve) => {
+    const rect = button.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const radius = Math.hypot(
+      Math.max(cx, window.innerWidth - cx),
+      Math.max(cy, window.innerHeight - cy)
+    ) + 12;
+
+    const ripple = document.createElement('span');
+    ripple.className = 'theme-ripple' + (next === 'light' ? ' theme-ripple--light' : '');
+    ripple.setAttribute('aria-hidden', 'true');
+    ripple.style.width = `${radius * 2}px`;
+    ripple.style.height = `${radius * 2}px`;
+    ripple.style.left = `${cx - radius}px`;
+    ripple.style.top = `${cy - radius}px`;
+    document.body.appendChild(ripple);
+
+    let finished = false;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      applyTheme(next);
+      ripple.classList.add('theme-ripple--fade');
+      setTimeout(() => {
+        ripple.remove();
+        resolve();
+      }, 190);
+    };
+
+    // Commit the starting scale before triggering the animation.
+    void ripple.offsetWidth;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => ripple.classList.add('theme-ripple--expand'));
+    });
+
+    ripple.addEventListener('animationend', (event) => {
+      if (event.animationName === 'theme-ripple-expand') finish();
+    });
+    // Safety net in case animationend never fires.
+    setTimeout(finish, THEME_RIPPLE_MS + 150);
+  });
+}
+
 /* ---------- auth ---------- */
 async function loadMe() {
   const data = await api('/api/auth/me');
@@ -906,8 +956,16 @@ function init() {
   });
 
   $('#theme-btn').onclick = async () => {
+    if (themeTransitioning) return;
     const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    themeTransitioning = true;
+    try {
+      if (reduceMotion) applyTheme(next);
+      else await animateThemeChange($('#theme-btn'), next);
+    } finally {
+      themeTransitioning = false;
+    }
     await api('/api/auth/me', { method: 'PATCH', body: JSON.stringify({ theme: next }) }).catch(() => {});
   };
 
